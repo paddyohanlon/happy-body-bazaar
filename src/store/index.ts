@@ -95,6 +95,7 @@ export default new Vuex.Store<RootState>({
         measurements: [],
       };
 
+      setAuthorizationHeader();
       commit("SIGN_IN", user);
     },
     autoSignIn({ commit }, userId: string) {
