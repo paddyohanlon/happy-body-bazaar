@@ -6,11 +6,7 @@ export type User = {
   idealWeight: number;
   measurementSystem: string;
   baseDumbbellWeight: number;
-};
-
-export type AuthUser = {
-  token: string;
-  user: User;
+  measurements: Measurement[];
 };
 
 export type UpdateUser = {
@@ -18,28 +14,10 @@ export type UpdateUser = {
   idealWeight?: number;
   measurementSystem?: string;
   baseDumbbellWeight?: number;
-};
-
-export type SignUp = {
-  email: string;
-  password: string;
-};
-
-export type SignIn = {
-  email: string;
-  password: string;
+  measurements?: Measurement[];
 };
 
 export type Measurement = {
-  id: string;
-  date: string; // date ISO
-  weight: number;
-  chest: number;
-  belly: number;
-  thigh: number;
-};
-
-export type NewMeasurement = {
   date: string; // date ISO
   weight: number;
   chest: number;
@@ -50,5 +28,4 @@ export type NewMeasurement = {
 export type RootState = {
   authenticated: boolean;
   user: User;
-  measurements: Measurement[];
 };

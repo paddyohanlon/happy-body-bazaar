@@ -1,6 +1,6 @@
 import Vue from "vue";
 import Vuex from "vuex";
-import { RootState, User, AuthUser, SignUp, SignIn, UpdateUser, Measurement, NewMeasurement } from "@/types/types";
+import { RootState, User, UpdateUser, Measurement } from "@/types/types";
 import { signOut } from "@/utils";
 
 import axios, { AxiosError } from "axios";
@@ -20,7 +20,7 @@ axios.interceptors.response.use(
 
 Vue.use(Vuex);
 
-const API_URL = process.env.NODE_ENV === "development" ? "http://localhost:3000/api/v1" : "/api/v1";
+const API_URL = process.env.NODE_ENV === "development" ? "http://localhost:3001/api/v1" : "/api/v1";
 
 function axiosErrorHandling(error: AxiosError) {
   console.log("Handle Axios error:");
@@ -54,8 +54,8 @@ export default new Vuex.Store<RootState>({
       idealWeight: 0,
       measurementSystem: "",
       baseDumbbellWeight: 0,
+      measurements: [],
     },
-    measurements: [],
   },
   mutations: {
     SET_USER: (state, user: User) => {
@@ -73,77 +73,29 @@ export default new Vuex.Store<RootState>({
       state.authenticated = true;
       state.user.id = id;
     },
-    SET_MEASUREMENTS: (state, measurements: Measurement[]) => {
-      state.measurements = measurements;
-    },
     ADD_MEASUREMENT: (state, measurement: Measurement) => {
-      if (state.measurements) {
-        state.measurements.unshift(measurement);
+      if (state.user.measurements) {
+        state.user.measurements.unshift(measurement);
       } else {
-        state.measurements = [measurement];
+        state.user.measurements = [measurement];
       }
     },
-    DELETE_MEASUREMENT: (state, measurementId: string) => {
-      const measurementIndex = state.measurements.findIndex(measurement => measurement.id === measurementId);
-      state.measurements.splice(measurementIndex, 1);
+    DELETE_MEASUREMENT: (state, index: number) => {
+      state.user.measurements.splice(index, 1);
     },
   },
   actions: {
-    async signUp({ commit }, signUp: SignUp): Promise<string[]> {
-      console.log("signUp", signUp);
+    oauthSetUser({ commit }, id: string) {
+      const user: User = {
+        id: id,
+        email: "",
+        idealWeight: 0,
+        measurementSystem: "metric",
+        baseDumbbellWeight: 2,
+        measurements: [],
+      };
 
-      try {
-        const response = await axios.post(`${API_URL}/sign-up`, signUp);
-
-        console.log("signUp -- response:", response);
-
-        const { token, user }: AuthUser = response.data;
-        console.log("signUp -- token:", token);
-        console.log("signUp -- user:", user);
-
-        localStorage.setItem("token", token);
-
-        setAuthorizationHeader();
-
-        commit("SIGN_UP", user);
-      } catch (error) {
-        if (error.response) {
-          return [error.response.data.message];
-        }
-        // axiosErrorHandling(error);
-      }
-
-      return [];
-    },
-    async signIn({ commit }, signIn: SignIn): Promise<string[]> {
-      console.log("signIn", signIn);
-
-      try {
-        const response = await axios.post(`${API_URL}/sign-in`, signIn);
-
-        console.log("signIn -- response:", response);
-
-        if (response.data.errors) {
-          console.log("signIn -- errors:", response.data.errors);
-          return response.data.errors.map((error: { message: string }) => error.message);
-        }
-        const { token, user }: AuthUser = response.data;
-        console.log("signIn -- token:", token);
-        console.log("signIn -- user:", user);
-
-        localStorage.setItem("token", token);
-
-        setAuthorizationHeader();
-
-        commit("SIGN_IN", user);
-      } catch (error) {
-        if (error.response) {
-          return [error.response.data.message];
-        }
-        // axiosErrorHandling(error);
-      }
-
-      return [];
+      commit("SIGN_IN", user);
     },
     autoSignIn({ commit }, userId: string) {
       setAuthorizationHeader();
@@ -154,55 +106,36 @@ export default new Vuex.Store<RootState>({
       try {
         const response = await axios.get(`${API_URL}/users/${state.user.id}`);
         const user: User = response.data;
-        // console.log("fetch user resp:", user);
+        console.log("fetch user resp:", user);
         commit("SET_USER", user);
       } catch (error) {
-        axiosErrorHandling(error);
+        const e = error as AxiosError;
+        axiosErrorHandling(e);
       }
     },
-    async updateUser({ commit, state }, updateUser: UpdateUser) {
+    async updateUser({ commit, state }, updateUser: UpdateUser = {}) {
       console.log("updateUser", updateUser);
+
+      // Merge updated user properties with existing user
+      const user = { ...state.user, ...updateUser };
+
       try {
-        const response = await axios.post(`${API_URL}/users/${state.user.id}`, updateUser);
-        const user: User = response.data;
-        console.log("update user resp:", user);
         commit("SET_USER", user);
+        await axios.post(`${API_URL}/users/${state.user.id}`, user);
       } catch (error) {
-        axiosErrorHandling(error);
+        const e = error as AxiosError;
+        axiosErrorHandling(e);
       }
     },
-    async fetchMeasurements({ commit, state }) {
-      try {
-        const response = await axios.get(`${API_URL}/users/${state.user.id}/measurements`);
-        const measurements: Measurement[] = response.data;
-        console.log("fetch measurements resp:", measurements);
-        commit("SET_MEASUREMENTS", measurements);
-      } catch (error) {
-        axiosErrorHandling(error);
-      }
+    async addMeasurement({ commit, dispatch }, measurement: Measurement) {
+      console.log("addMeasurement", measurement);
+      commit("ADD_MEASUREMENT", measurement);
+      dispatch("updateUser");
     },
-    async addMeasurement({ commit, state }, newMeasurement: NewMeasurement) {
-      try {
-        console.log("addMeasurement", newMeasurement);
-        const response = await axios.post(`${API_URL}/users/${state.user.id}/measurements`, newMeasurement);
-
-        const measurement: Measurement = response.data;
-        console.log("addMeasurement -- response:", measurement);
-
-        commit("ADD_MEASUREMENT", measurement);
-      } catch (error) {
-        axiosErrorHandling(error);
-      }
-    },
-    async deleteMeasurement({ commit, state }, measurementId: string) {
-      console.log("deleting measurement", measurementId);
-
-      try {
-        await axios.delete(`${API_URL}/users/${state.user.id}/measurements/${measurementId}`);
-        commit("DELETE_MEASUREMENT", measurementId);
-      } catch (error) {
-        axiosErrorHandling(error);
-      }
+    async deleteMeasurement({ commit, dispatch }, index: number) {
+      console.log("deleting measurement", index);
+      commit("DELETE_MEASUREMENT", index);
+      dispatch("updateUser");
     },
   },
   getters: {},

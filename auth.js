@@ -1,27 +1,21 @@
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
 const r = require("rethinkdb");
 const { rdbConn, tableNames } = require("./db");
 
-// This should not be used in production
-const secret = "supersecret";
+// Get public JWT key from auth server
+const jwksClient = require("jwks-rsa");
 
-/**
- * takes a user ID and creates jwt out of it
- * @param {String} id the user ID to create a jwt for
- */
-const createToken = id => jwt.sign({ id: id }, secret, { expiresIn: 60 * 60 * 24 * 30 });
+const client = jwksClient({
+  jwksUri: "http://127.0.0.1:4444/.well-known/jwks.json",
+});
 
-const createPasswordHash = password => bcrypt.hashSync(password, 10);
+function getKey(header, callback) {
+  client.getSigningKey(header.kid, function(err, key) {
+    const signingKey = key.publicKey || key.rsaPublicKey;
+    callback(null, signingKey);
+  });
+}
 
-const checkPassword = (password, hash) => bcrypt.compareSync(password, hash);
-
-/**
- * will attempt to verify a jwt and find a user in the
- * db associated with it. Catches any error and returns
- * a null user
- * @param {String} bearer authorization header from client
- */
 const getUserFromBearer = async bearer => {
   if (!bearer || !bearer.startsWith("Bearer ")) {
     return null;
@@ -29,16 +23,31 @@ const getUserFromBearer = async bearer => {
 
   const token = bearer.split("Bearer ")[1].trim();
 
+  const result = new Promise((resolve, reject) => {
+    jwt.verify(token, getKey, {}, (err, decoded) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(decoded);
+      }
+    });
+  });
+
   try {
-    const tokenDecoded = jwt.verify(token, secret);
+    const decoded = await result;
+
+    console.log("decoded", decoded);
+
     const conn = await rdbConn();
     const user = await r
       .table(tableNames.users)
-      .get(tokenDecoded.id)
+      .get(decoded.sub)
       .run(conn);
     delete user.passwordHash;
+
     return user;
   } catch (e) {
+    console.log("error verifying:", e);
     return null;
   }
 };
@@ -60,8 +69,5 @@ const authenticate = async (req, res, next) => {
 };
 
 module.exports = {
-  createToken,
-  createPasswordHash,
-  checkPassword,
   authenticate,
 };

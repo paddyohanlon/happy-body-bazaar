@@ -5,6 +5,7 @@ import Measurements from "../views/Measurements.vue";
 import Profile from "../views/Profile.vue";
 import SignIn from "../views/SignIn.vue";
 import SignUp from "../views/SignUp.vue";
+import Callback from "../views/Callback.vue";
 
 Vue.use(VueRouter);
 
@@ -19,6 +20,12 @@ const routes: Array<RouteConfig> = [
     path: "/sign-in",
     name: "signIn",
     component: SignIn,
+    meta: { requiresAuth: false },
+  },
+  {
+    path: "/callback",
+    name: "callback",
+    component: Callback,
     meta: { requiresAuth: false },
   },
   {
@@ -39,6 +46,7 @@ const routes: Array<RouteConfig> = [
 ];
 
 const router = new VueRouter({
+  mode: "history",
   routes,
   linkExactActiveClass: "is-active",
 });
@@ -48,7 +56,7 @@ router.beforeEach((to, from, next) => {
   if (to.matched.some(record => record.meta.requiresAuth !== false)) {
     if (!localStorage.getItem("token")) {
       // Redirect to the sign in view if no token found and route requires auth
-      next({ name: "signUp" });
+      next({ name: "signIn" });
       return;
     }
   }

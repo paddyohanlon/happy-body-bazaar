@@ -40,6 +40,5 @@ module.exports = {
   },
   tableNames: {
     users: "users",
-    measurements: "measurements",
   },
 };

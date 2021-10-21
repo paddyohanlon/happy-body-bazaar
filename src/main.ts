@@ -16,9 +16,9 @@ new Vue({
     console.log("token", token);
     if (token) {
       try {
-        const tokenDecoded: { id: string } = jwt_decode(token);
+        const tokenDecoded: { sub: string } = jwt_decode(token);
         console.log("tokenDecoded", tokenDecoded);
-        this.$store.dispatch("autoSignIn", tokenDecoded.id);
+        this.$store.dispatch("autoSignIn", tokenDecoded.sub);
       } catch (error) {
         console.log("token decode error:", error);
         localStorage.removeItem("token");

@@ -3,13 +3,13 @@
     <h1 class="title is-1">Measurements</h1>
 
     <!-- Big stats -->
-    <template v-if="measurements.length > 0">
+    <template v-if="user.measurements && user.measurements.length > 0">
       <div class="level">
         <!-- item -->
         <div class="level-item has-text-centered">
           <div>
             <div class="heading">current/ideal weight</div>
-            <div class="title">{{ measurements[0].weight }}/{{ user.idealWeight.toFixed(1) }}kg</div>
+            <div class="title">{{ user.measurements[0].weight }}/{{ user.idealWeight.toFixed(1) }}kg</div>
           </div>
         </div>
         <!-- item -->
@@ -17,7 +17,7 @@
           <div>
             <div class="heading">current/ideal muscle</div>
             <div class="title">
-              {{ muscleWeight(measurements[0]).toFixed(2) }}/{{ idealWeightMuscle.toFixed(2) }}kg (90%)
+              {{ muscleWeight(user.measurements[0]).toFixed(2) }}/{{ idealWeightMuscle.toFixed(2) }}kg (90%)
             </div>
           </div>
         </div>
@@ -25,21 +25,23 @@
         <div class="level-item has-text-centered">
           <div>
             <div class="heading">current/ideal muscle %</div>
-            <div class="title">{{ ((1 - fatPercent(measurements[0])) * 100).toFixed() }}/90%</div>
+            <div class="title">{{ ((1 - fatPercent(user.measurements[0])) * 100).toFixed() }}/90%</div>
           </div>
         </div>
         <!-- item -->
         <div class="level-item has-text-centered">
           <div>
             <div class="heading">current/ideal fat weight</div>
-            <div class="title">{{ fatWeight(measurements[0]).toFixed(2) }}/{{ this.idealWeightFat.toFixed(2) }}kg</div>
+            <div class="title">
+              {{ fatWeight(user.measurements[0]).toFixed(2) }}/{{ this.idealWeightFat.toFixed(2) }}kg
+            </div>
           </div>
         </div>
         <!-- item -->
         <div class="level-item has-text-centered">
           <div>
             <div class="heading">current/ideal fat %</div>
-            <div class="title">{{ (fatPercent(measurements[0]) * 100).toFixed() }}/10%</div>
+            <div class="title">{{ (fatPercent(user.measurements[0]) * 100).toFixed() }}/10%</div>
           </div>
         </div>
       </div>
@@ -151,7 +153,7 @@
       <div class="card mb-4">
         <div class="card-content">
           <div class="content">
-            <div class="table-container" v-if="measurements.length > 0">
+            <div class="table-container" v-if="user.measurements && user.measurements.length > 0">
               <table class="table">
                 <thead>
                   <tr>
@@ -164,7 +166,7 @@
                   </tr>
                 </thead>
                 <tbody role="region" aria-live="polite">
-                  <tr v-for="measurement in measurements" :key="measurement.id">
+                  <tr v-for="(measurement, name, index) in user.measurements" :key="measurement.id">
                     <td>{{ new Date(measurement.date).toLocaleDateString() }}</td>
                     <td>{{ measurement.weight }}{{ weightUnit(user.measurementSystem) }}</td>
                     <td>{{ sizeTotal(measurement).toFixed(2) }}{{ lengthUnit(user.measurementSystem) }}</td>
@@ -177,7 +179,7 @@
                       }}{{ weightUnit(user.measurementSystem) }})
                     </td>
                     <td>
-                      <button class="button is-small is-info is-inverted" @click="deleteMeasurement(measurement.id)">
+                      <button class="button is-small is-info is-inverted" @click="deleteMeasurement(index)">
                         Delete
                       </button>
                     </td>
@@ -199,7 +201,7 @@
 import { Component, Mixins } from "vue-property-decorator";
 import { State } from "vuex-class";
 import Utils from "@/mixins/utils";
-import { User, Measurement, NewMeasurement } from "@/types/types";
+import { User, Measurement } from "@/types/types";
 
 @Component
 export default class Measurements extends Mixins(Utils) {
@@ -208,13 +210,11 @@ export default class Measurements extends Mixins(Utils) {
       this.$router.push({ name: "profile" });
       return;
     }
-    this.$store.dispatch("fetchMeasurements");
   }
 
   @State(state => state.user) user!: User;
-  @State(state => state.measurements) measurements!: Measurement[];
 
-  newMeasurementInitial: NewMeasurement = {
+  newMeasurementInitial: Measurement = {
     date: new Date().toISOString(),
     weight: 0,
     chest: 0,
@@ -222,7 +222,7 @@ export default class Measurements extends Mixins(Utils) {
     thigh: 0,
   };
 
-  newMeasurement: NewMeasurement = this.newMeasurementInitial;
+  newMeasurement: Measurement = this.newMeasurementInitial;
 
   lb = "lb";
   cm = "cm";
@@ -243,7 +243,7 @@ export default class Measurements extends Mixins(Utils) {
   }
 
   get fatWeightToLose() {
-    return this.fatWeight(this.measurements[0]) - this.idealWeightFat;
+    return this.fatWeight(this.user.measurements[0]) - this.idealWeightFat;
   }
 
   get weeksToIdealFat() {
@@ -251,11 +251,11 @@ export default class Measurements extends Mixins(Utils) {
   }
 
   get weightToGain() {
-    return this.user.idealWeight - this.measurements[0].weight;
+    return this.user.idealWeight - this.user.measurements[0].weight;
   }
 
   get muscleWeightToGain() {
-    return this.idealWeightMuscle - this.muscleWeight(this.measurements[0]);
+    return this.idealWeightMuscle - this.muscleWeight(this.user.measurements[0]);
   }
 
   get weeksToIdealMuscle() {
@@ -267,10 +267,10 @@ export default class Measurements extends Mixins(Utils) {
     this.newMeasurement = Object.assign({}, this.newMeasurementInitial);
   }
 
-  deleteMeasurement(measurementId: string) {
+  deleteMeasurement(index: number) {
     const deleteConfirmed = window.confirm("Are you sure? This can't be undone.");
     if (deleteConfirmed) {
-      this.$store.dispatch("deleteMeasurement", measurementId);
+      this.$store.dispatch("deleteMeasurement", index);
     }
   }
 
