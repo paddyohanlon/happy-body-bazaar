@@ -1,4 +1,4 @@
-# The Happy Body App with REST API
+# The Happy Body App Vue.js SPA
 
 The Happy Body Vue.js app is meant as a companion app for people doing the [Happy Body](https://thehappybody.com/) program. It helps calculate dumbbell weights and record body measurements to track progress.
 
