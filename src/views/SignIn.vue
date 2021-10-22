@@ -1,12 +1,6 @@
 <template>
-  <!-- <div class="small-container"> -->
-  <div>
+  <div class="small-container">
     <h1 class="title is-1">Sign in</h1>
-
-    <!-- <div>{{ clientUri() }}</div> -->
-    <!-- <div>
-      http://127.0.0.1:4444/oauth2/auth?audience=&client_id=happy-body-auth-code-client&max_age=0&nonce=hikibhcgnhecqdjkusmetfku&prompt=&redirect_uri=http%3A%2F%2F127.0.0.1%3A8080%2Fcallback&response_type=code&scope=openid+offline&state=dsakfzieyfuqwwyeifhmpcqd
-    </div> -->
 
     <div class="card mb-4">
       <div class="card-content">

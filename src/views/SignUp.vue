@@ -5,10 +5,7 @@
     <div class="card mb-4">
       <div class="card-content">
         <div class="content">
-          <a
-            href="http://127.0.0.1:3000/sign-up?client_id=happy-body-auth-code-client&redirect_uri=http%3A%2F%2F127.0.0.1%3A8080%2Fsign-in"
-            >Sign up with RethinkID</a
-          >
+          <a :href="signUpUri">Sign up with RethinkID</a>
         </div>
       </div>
     </div>
@@ -19,7 +16,13 @@
 import { Component, Vue } from "vue-property-decorator";
 
 @Component
-export default class SignUpView extends Vue {}
+export default class SignUpView extends Vue {
+  get signUpUri(): string {
+    const params = new URLSearchParams();
+    params.append("redirect_uri", process.env.VUE_APP_DATA_SIGN_UP_REDIRECT_URI);
+    return `${process.env.VUE_APP_DATA_SIGN_UP_URL}?${params.toString()}`;
+  }
+}
 </script>
 
 <style scoped lang="scss"></style>

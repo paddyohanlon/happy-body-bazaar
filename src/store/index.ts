@@ -20,7 +20,7 @@ axios.interceptors.response.use(
 
 Vue.use(Vuex);
 
-const API_URL = process.env.NODE_ENV === "development" ? "http://localhost:3001/api/v1" : "/api/v1";
+const API_URL = process.env.NODE_ENV === "development" ? process.env.VUE_APP_DATA_API_URL : "/api/v1";
 
 function axiosErrorHandling(error: AxiosError) {
   console.log("Handle Axios error:");
