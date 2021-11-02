@@ -32,7 +32,7 @@
             <div class="buttons">
               <!-- <div class="button">Status: {{ onlineStatus }}</div> -->
               <template v-if="authenticated">
-                <div class="button">{{ user.email }}</div>
+                <div class="button">{{ openIdConnect.name || openIdConnect.email }}</div>
                 <button class="button" @click="signOut">Sign out</button>
               </template>
               <template v-else>
@@ -56,7 +56,7 @@
 <script lang="ts">
 import { Component, Vue } from "vue-property-decorator";
 import { State } from "vuex-class";
-import { User } from "@/types/types";
+import { OpenIDConnect } from "@/types/types";
 import { signOut } from "@/utils";
 
 @Component
@@ -71,7 +71,7 @@ export default class App extends Vue {
   }
 
   @State(state => state.authenticated) authenticated!: boolean;
-  @State(state => state.user) user!: User;
+  @State(state => state.openIdConnect) openIdConnect!: OpenIDConnect;
 
   isActive = false;
   loaded = false;

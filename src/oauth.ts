@@ -5,7 +5,7 @@ export const oauthClient = new ClientOAuth2({
   accessTokenUri: process.env.VUE_APP_OAUTH_TOKEN_URI,
   authorizationUri: process.env.VUE_APP_OAUTH_AUTH_URI,
   redirectUri: process.env.VUE_APP_OAUTH_REDIRECT_URI,
-  scopes: ["openid", "offline"],
+  scopes: ["openid", "name", "email"],
 });
 
 // PKCE HELPER FUNCTIONS

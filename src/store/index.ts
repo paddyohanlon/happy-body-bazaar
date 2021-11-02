@@ -1,6 +1,6 @@
 import Vue from "vue";
 import Vuex from "vuex";
-import { RootState, User, UpdateUser, Measurement } from "@/types/types";
+import { RootState, User, UpdateUser, Measurement, OpenIDConnect } from "@/types/types";
 import { signOut } from "@/utils";
 
 import axios, { AxiosError } from "axios";
@@ -48,9 +48,12 @@ function setAuthorizationHeader(): void {
 export default new Vuex.Store<RootState>({
   state: {
     authenticated: false,
-    user: {
-      id: "",
+    openIdConnect: {
+      userId: "",
       email: "",
+      name: "",
+    },
+    user: {
       idealWeight: 0,
       measurementSystem: "",
       baseDumbbellWeight: 0,
@@ -65,13 +68,10 @@ export default new Vuex.Store<RootState>({
       state.authenticated = true;
       state.user = user;
     },
-    SIGN_IN: (state, user: User) => {
+    SIGN_IN: (state, { openIdConnect, user }: { openIdConnect: OpenIDConnect; user: User }) => {
       state.authenticated = true;
+      state.openIdConnect = openIdConnect;
       state.user = user;
-    },
-    AUTO_SIGN_IN: (state, id: string) => {
-      state.authenticated = true;
-      state.user.id = id;
     },
     ADD_MEASUREMENT: (state, measurement: Measurement) => {
       if (state.user.measurements) {
@@ -85,10 +85,14 @@ export default new Vuex.Store<RootState>({
     },
   },
   actions: {
-    oauthSetUser({ commit }, id: string) {
+    autoSignIn({ commit }, { sub, email, name }: { sub: string; email: string; name: string }) {
+      const openIdConnect = {
+        userId: sub,
+        email,
+        name,
+      };
+
       const user: User = {
-        id: id,
-        email: "",
         idealWeight: 0,
         measurementSystem: "metric",
         baseDumbbellWeight: 2,
@@ -96,16 +100,12 @@ export default new Vuex.Store<RootState>({
       };
 
       setAuthorizationHeader();
-      commit("SIGN_IN", user);
-    },
-    autoSignIn({ commit }, userId: string) {
-      setAuthorizationHeader();
-      commit("AUTO_SIGN_IN", userId);
+      commit("SIGN_IN", { openIdConnect, user });
     },
     async fetchUser({ commit, state }) {
       console.log("fetchUser");
       try {
-        const response = await axios.get(`${API_URL}/users/${state.user.id}`);
+        const response = await axios.get(`${API_URL}/users/${state.openIdConnect.userId}`);
         const user: User = response.data;
         console.log("fetch user resp:", user);
         commit("SET_USER", user);
@@ -122,7 +122,7 @@ export default new Vuex.Store<RootState>({
 
       try {
         commit("SET_USER", user);
-        await axios.post(`${API_URL}/users/${state.user.id}`, user);
+        await axios.post(`${API_URL}/users/${state.openIdConnect.userId}`, user);
       } catch (error) {
         const e = error as AxiosError;
         axiosErrorHandling(e);

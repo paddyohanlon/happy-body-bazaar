@@ -1,8 +1,6 @@
 // Measurements are always stored in metric.
 
 export type User = {
-  id: string;
-  email: string;
   idealWeight: number;
   measurementSystem: string;
   baseDumbbellWeight: number;
@@ -10,7 +8,6 @@ export type User = {
 };
 
 export type UpdateUser = {
-  email?: string;
   idealWeight?: number;
   measurementSystem?: string;
   baseDumbbellWeight?: number;
@@ -25,7 +22,14 @@ export type Measurement = {
   thigh: number;
 };
 
+export type OpenIDConnect = {
+  userId: string;
+  email: string;
+  name: string;
+};
+
 export type RootState = {
   authenticated: boolean;
+  openIdConnect: OpenIDConnect;
   user: User;
 };

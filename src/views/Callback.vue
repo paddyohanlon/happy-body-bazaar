@@ -64,18 +64,17 @@ export default class Callback extends Vue {
 
     // Store tokens and sign user in locally
     const token: string = getTokenResponse.data.access_token;
-    const id_token: string = getTokenResponse.data.id_token;
+    const idToken: string = getTokenResponse.data.id_token;
 
     localStorage.setItem("token", token);
-    localStorage.setItem("id_token", id_token);
+    localStorage.setItem("idToken", idToken);
 
     try {
       const tokenDecoded: { sub: string } = jwt_decode(token);
-      const idTokenDecoded = jwt_decode(id_token);
+      const idTokenDecoded = jwt_decode(idToken);
       console.log("idTokenDecoded", idTokenDecoded);
       console.log("tokenDecoded", tokenDecoded);
-      console.log("tokenDecoded.sub", tokenDecoded.sub);
-      this.$store.dispatch("oauthSetUser", tokenDecoded.sub);
+      await this.$store.dispatch("autoSignIn", idTokenDecoded);
       this.$store.dispatch("fetchUser");
       this.$router.push({ name: "home" });
     } catch (error) {
