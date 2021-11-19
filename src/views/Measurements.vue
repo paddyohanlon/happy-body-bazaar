@@ -205,13 +205,6 @@ import { User, Measurement } from "@/types/types";
 
 @Component
 export default class Measurements extends Mixins(Utils) {
-  async created() {
-    if (!this.user.idealWeight) {
-      this.$router.push({ name: "profile" });
-      return;
-    }
-  }
-
   @State(state => state.user) user!: User;
 
   newMeasurementInitial: Measurement = {
