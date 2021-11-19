@@ -1,48 +1,18 @@
 import Vue from "vue";
 import Vuex from "vuex";
+import createSocketPlugin from "@/socket-store-plugin";
+import socket from "@/socket";
 import { RootState, User, UpdateUser, Measurement, OpenIDConnect } from "@/types/types";
-import { signOut } from "@/utils";
-
-import axios, { AxiosError } from "axios";
-axios.defaults.headers.post["Content-Type"] = "application/json";
-
-// If a response 401s, we assume the token is invalid and logout
-axios.interceptors.response.use(
-  response => response,
-  error => {
-    console.log("intercepted error", error);
-    if (error.response.status === 401) {
-      signOut();
-    }
-    return Promise.reject(error);
-  },
-);
 
 Vue.use(Vuex);
 
-const API_URL = process.env.NODE_ENV === "development" ? process.env.VUE_APP_DATA_API_URL : "/api/v1";
+const socketPlugin = createSocketPlugin(socket);
 
-function axiosErrorHandling(error: AxiosError) {
-  console.log("Handle Axios error:");
-  if (error.response) {
-    // The request was made and the server responded with a status code
-    // that falls out of the range of 2xx
-    console.log("data", error.response.data);
-    console.log("status", error.response.status);
-    console.log("headers", error.response.headers);
-  } else if (error.request) {
-    // The request was made but no response was received
-    // `error.request` is an instance of XMLHttpRequest in the browser and an instance of
-    // http.ClientRequest in node.js
-    console.log("error.request", error.request);
-  } else {
-    // Something happened in setting up the request that triggered an Error
-    console.log("Error something", error.message);
-  }
-}
-
-function setAuthorizationHeader(): void {
-  axios.defaults.headers.common["Authorization"] = `Bearer ${localStorage.getItem("token")}`;
+// Set after sign up/in
+function setSocketAuthToken(): void {
+  socket.auth = {
+    token: localStorage.getItem("token"),
+  };
 }
 
 export default new Vuex.Store<RootState>({
@@ -99,20 +69,18 @@ export default new Vuex.Store<RootState>({
         measurements: [],
       };
 
-      setAuthorizationHeader();
+      // setAuthorizationHeader();
+      setSocketAuthToken();
       commit("SIGN_IN", { openIdConnect, user });
     },
     async fetchUser({ commit, state }) {
       console.log("fetchUser");
-      try {
-        const response = await axios.get(`${API_URL}/users/${state.openIdConnect.userId}`);
-        const user: User = response.data;
-        console.log("fetch user resp:", user);
+
+      // @ts-ignore
+      this.$socket.emit("user:read", { userId: state.openIdConnect.userId }, (user: User) => {
+        console.log("user", user);
         commit("SET_USER", user);
-      } catch (error) {
-        const e = error as AxiosError;
-        axiosErrorHandling(e);
-      }
+      });
     },
     async updateUser({ commit, state }, updateUser: UpdateUser = {}) {
       console.log("updateUser", updateUser);
@@ -120,13 +88,17 @@ export default new Vuex.Store<RootState>({
       // Merge updated user properties with existing user
       const user = { ...state.user, ...updateUser };
 
-      try {
-        commit("SET_USER", user);
-        await axios.post(`${API_URL}/users/${state.openIdConnect.userId}`, user);
-      } catch (error) {
-        const e = error as AxiosError;
-        axiosErrorHandling(e);
-      }
+      commit("SET_USER", user);
+
+      console.log("emit user:update");
+
+      // @ts-ignore
+      this.$socket.emit("user:update", { userId: state.openIdConnect.userId, user: user });
+    },
+    updateUserReceived({ commit }, updateUser: UpdateUser) {
+      // Received socket.io broadcast
+      console.log("updateUserBroadcastReceived", updateUser);
+      commit("UPDATE_USER", updateUser);
     },
     async addMeasurement({ commit, dispatch }, measurement: Measurement) {
       console.log("addMeasurement", measurement);
@@ -141,4 +113,5 @@ export default new Vuex.Store<RootState>({
   },
   getters: {},
   modules: {},
+  plugins: [socketPlugin],
 });
