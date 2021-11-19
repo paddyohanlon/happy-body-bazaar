@@ -8,7 +8,7 @@ Vue.use(Vuex);
 
 const socketPlugin = createSocketPlugin(socket);
 
-// Set after sign up/in
+// Set after sign in
 function setSocketAuthToken(): void {
   socket.auth = {
     token: localStorage.getItem("token"),
@@ -69,7 +69,6 @@ export default new Vuex.Store<RootState>({
         measurements: [],
       };
 
-      // setAuthorizationHeader();
       setSocketAuthToken();
       commit("SIGN_IN", { openIdConnect, user });
     },
