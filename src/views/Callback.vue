@@ -77,6 +77,7 @@ export default class Callback extends Vue {
       await this.$store.dispatch("autoSignIn", idTokenDecoded);
       this.$store.dispatch("fetchUser");
       this.$router.push({ name: "home" });
+      location.reload();
     } catch (error) {
       console.log("token decode error:", error);
     }

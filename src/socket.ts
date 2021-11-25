@@ -13,7 +13,7 @@ socket.on("connect", () => {
 
 socket.on("connect_error", err => {
   console.error("err.message", err.message);
-  if (err.message === "Unauthorized") {
+  if (err.message.includes("Unauthorized")) {
     signOut();
   }
 });

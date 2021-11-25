@@ -1,6 +1,7 @@
 // Measurements are always stored in metric.
 
 export type User = {
+  id: string; // table row ID
   idealWeight: number;
   measurementSystem: string;
   baseDumbbellWeight: number;
