@@ -30,7 +30,6 @@
         <div class="navbar-end">
           <div class="navbar-item">
             <div class="buttons">
-              <!-- <div class="button">Status: {{ onlineStatus }}</div> -->
               <template v-if="authenticated">
                 <div class="button">{{ openIdConnect.name || openIdConnect.email }}</div>
                 <button class="button" @click="signOut">Sign out</button>
