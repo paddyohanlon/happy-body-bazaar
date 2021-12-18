@@ -1,12 +1,9 @@
 import Vue from "vue";
 import Vuex from "vuex";
-import createSocketPlugin from "@/socket-store-plugin";
 import socket from "@/socket";
 import { RootState, User, UpdateUser, Measurement, OpenIDConnect } from "@/types/types";
 
 Vue.use(Vuex);
-
-const socketPlugin = createSocketPlugin(socket);
 
 // Set after sign in
 function setSocketAuthToken(): void {
@@ -68,25 +65,26 @@ export default new Vuex.Store<RootState>({
     async fetchUser({ commit, state }) {
       console.log("fetchUser");
 
-      // Get table
-      // Table will be created if doesn't exist
-      const payload = { tableName: USER_TABLE_NAME, tableUserId: state.openIdConnect.userId };
-      socket.emit("table:list", payload, (response: { data: unknown[]; socketTableHandle: string }) => {
-        console.log("table:list response:", response);
+      const payload = { tableName: USER_TABLE_NAME, rowId: state.openIdConnect.userId };
+      socket.emit("table:read", payload, (response: { data?: unknown[]; error?: string }) => {
+        console.log("table:read response:", response);
 
-        if (response.data.length > 0) {
-          // user data will always be the first and only item
-          console.log("setting user from socket.io connection");
-          commit("SET_USER", response.data[0]);
+        if (response.data) {
+          commit("SET_USER", response.data);
         } else {
-          console.log("First time fetching user, let's add a row for user info");
+          console.log("No user, first time fetching user, so insert user");
 
-          // Set table row ID to user ID
+          if (response.error) {
+            console.log("table:read response.error", response.error);
+          }
+
+          // Set row ID to user ID
           DEFAULT_USER.id = state.openIdConnect.userId;
 
-          const payload = { userId: state.openIdConnect.userId, tableName: USER_TABLE_NAME, row: DEFAULT_USER };
-          socket.emit("table:row:create", payload, (response: { message: string } | { error: string }) => {
-            console.log("table:row:create: response", response);
+          // Table will be created if doesn't exist
+          const payload = { tableName: USER_TABLE_NAME, row: DEFAULT_USER };
+          socket.emit("table:insert", payload, (response: { message: string } | { error: string }) => {
+            console.log("table:insert: response", response);
           });
         }
       });
@@ -99,17 +97,10 @@ export default new Vuex.Store<RootState>({
 
       commit("SET_USER", user);
 
-      console.log("emit table:row:update");
-
-      const payload = { userId: state.openIdConnect.userId, tableName: USER_TABLE_NAME, row: user };
-      socket.emit("table:row:update", payload, (response: any) => {
-        console.log("table:row:update response", response);
+      const payload = { tableName: USER_TABLE_NAME, row: user };
+      socket.emit("table:update", payload, (response: any) => {
+        console.log("table:update response", response);
       });
-    },
-    updateUserReceived({ commit }, updateUser: UpdateUser) {
-      // Received socket.io broadcast
-      console.log("updateUserBroadcastReceived", updateUser);
-      commit("UPDATE_USER", updateUser);
     },
     async addMeasurement({ commit, dispatch }, measurement: Measurement) {
       console.log("addMeasurement", measurement);
@@ -124,5 +115,4 @@ export default new Vuex.Store<RootState>({
   },
   getters: {},
   modules: {},
-  plugins: [socketPlugin],
 });
