@@ -17,10 +17,7 @@ new Vue({
 
     if (token && idToken) {
       try {
-        const tokenDecoded: { sub: string } = jwt_decode(token);
         const idTokenDecoded: { sub: string; email: string; name: string } = jwt_decode(idToken);
-        console.log("tokenDecoded", tokenDecoded);
-        console.log("idTokenDecoded", idTokenDecoded);
         this.$store.dispatch("autoSignIn", idTokenDecoded);
       } catch (error) {
         console.log("token decode error:", error);
