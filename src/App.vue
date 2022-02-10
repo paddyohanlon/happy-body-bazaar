@@ -45,7 +45,6 @@
     </nav>
     <!-- End navbar -->
     <section class="section">
-      <!-- TODO do loading here -->
       <router-view v-if="loaded" />
       <div v-else>Loading...</div>
     </section>

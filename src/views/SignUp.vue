@@ -19,8 +19,8 @@ import { Component, Vue } from "vue-property-decorator";
 export default class SignUpView extends Vue {
   get signUpUri(): string {
     const params = new URLSearchParams();
-    params.append("redirect_uri", process.env.VUE_APP_DATA_SIGN_UP_REDIRECT_URI);
-    return `${process.env.VUE_APP_DATA_SIGN_UP_URL}?${params.toString()}`;
+    params.append("redirect_uri", process.env.VUE_APP_SIGN_UP_REDIRECT_URI);
+    return `${process.env.VUE_APP_SIGN_UP_URL}?${params.toString()}`;
   }
 }
 </script>
