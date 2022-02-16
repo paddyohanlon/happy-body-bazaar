@@ -5,6 +5,7 @@
     <div class="card mb-4">
       <div class="card-content">
         <div class="content">
+          <div v-if="signUpEmail" class="notification is-success">Sign up with {{ signUpEmail }} successful!</div>
           <a :href="clientUri">Sign in with RethinkID</a>
         </div>
       </div>
@@ -20,7 +21,14 @@ import { oauthClient, generateRandomString, pkceChallengeFromVerifier } from "@/
 export default class SignInView extends Vue {
   created() {
     this.getClientUri();
+
+    const signUpEmail = this.$route.query["sign_up_email"];
+    if (signUpEmail && typeof signUpEmail === "string") {
+      this.signUpEmail = signUpEmail;
+    }
   }
+
+  signUpEmail = "";
 
   clientUri = "";
 
@@ -41,6 +49,7 @@ export default class SignInView extends Vue {
       query: {
         code_challenge: codeChallenge,
         code_challenge_method: "S256",
+        email: this.signUpEmail,
       },
     });
   }
