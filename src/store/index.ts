@@ -1,16 +1,9 @@
 import Vue from "vue";
 import Vuex from "vuex";
-import socket from "@/socket";
 import { RootState, User, UpdateUser, Measurement, OpenIDConnect } from "@/types/types";
+import { rid } from "@/rethinkid";
 
 Vue.use(Vuex);
-
-// Set after sign in
-function setSocketAuthToken(): void {
-  socket.auth = {
-    token: localStorage.getItem("token"),
-  };
-}
 
 const USER_TABLE_NAME = "my_user_info";
 
@@ -59,35 +52,28 @@ export default new Vuex.Store<RootState>({
         name,
       };
 
-      setSocketAuthToken();
       commit("SIGN_IN", openIdConnect);
     },
     async fetchUser({ commit, state }) {
       console.log("fetchUser");
 
-      const payload = { tableName: USER_TABLE_NAME, rowId: state.openIdConnect.userId };
-      socket.emit("table:read", payload, (response: { data?: unknown[]; error?: string }) => {
-        console.log("table:read response:", response);
-
+      try {
+        const response = await rid.tableRead(USER_TABLE_NAME, state.openIdConnect.userId);
         if (response.data) {
           commit("SET_USER", response.data);
-        } else {
-          console.log("No user, first time fetching user, so insert user");
-
-          if (response.error) {
-            console.log("table:read response.error", response.error);
-          }
-
-          // Set row ID to user ID
-          DEFAULT_USER.id = state.openIdConnect.userId;
-
-          // Table will be created if doesn't exist
-          const payload = { tableName: USER_TABLE_NAME, row: DEFAULT_USER };
-          socket.emit("table:insert", payload, (response: { message: string } | { error: string }) => {
-            console.log("table:insert: response", response);
-          });
+          return;
         }
-      });
+      } catch (e) {
+        console.log("tableRead error", e);
+
+        // Assume table doesn't exist
+
+        // Set row ID to user ID
+        DEFAULT_USER.id = state.openIdConnect.userId;
+
+        const result = await rid.tableInsert(USER_TABLE_NAME, DEFAULT_USER);
+        console.log("tableInsert result", result);
+      }
     },
     async updateUser({ commit, state }, updateUser: UpdateUser = {}) {
       console.log("updateUser", updateUser);
@@ -97,10 +83,8 @@ export default new Vuex.Store<RootState>({
 
       commit("SET_USER", user);
 
-      const payload = { tableName: USER_TABLE_NAME, row: user };
-      socket.emit("table:update", payload, (response: any) => {
-        console.log("table:update response", response);
-      });
+      const response = await rid.tableUpdate(USER_TABLE_NAME, user);
+      console.log("update response", response);
     },
     async addMeasurement({ commit, dispatch }, measurement: Measurement) {
       console.log("addMeasurement", measurement);

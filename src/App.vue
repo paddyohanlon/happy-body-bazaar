@@ -55,7 +55,7 @@
 import { Component, Vue } from "vue-property-decorator";
 import { State } from "vuex-class";
 import { OpenIDConnect } from "@/types/types";
-import { signOut } from "@/utils";
+import { rid } from "@/rethinkid";
 
 @Component
 export default class App extends Vue {
@@ -82,7 +82,7 @@ export default class App extends Vue {
   }
 
   signOut(): void {
-    signOut();
+    rid.logOut();
   }
 }
 </script>

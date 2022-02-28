@@ -3,7 +3,7 @@ import App from "./App.vue";
 import router from "./router";
 import store from "./store";
 
-import jwt_decode from "jwt-decode";
+import { rid } from "@/rethinkid";
 
 Vue.config.productionTip = false;
 
@@ -11,18 +11,11 @@ new Vue({
   router,
   store,
   created() {
-    // auto-sign in
-    const token = localStorage.getItem("token");
-    const idToken = localStorage.getItem("idToken");
+    // auto-log in
+    const loggedIn = rid.isLoggedIn();
 
-    if (token && idToken) {
-      try {
-        const idTokenDecoded: { sub: string; email: string; name: string } = jwt_decode(idToken);
-        this.$store.dispatch("autoSignIn", idTokenDecoded);
-      } catch (error) {
-        console.log("token decode error:", error);
-        localStorage.removeItem("token");
-      }
+    if (loggedIn && loggedIn.idTokenDecoded) {
+      this.$store.dispatch("autoSignIn", loggedIn.idTokenDecoded);
     }
   },
   render: h => h(App),
