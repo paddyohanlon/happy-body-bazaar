@@ -110,7 +110,7 @@ export default new Vuex.Store<RootState>({
 
       commit("SET_USER", user);
 
-      const response = await state.userTable.update(USER_TABLE_NAME, user);
+      const response = await state.userTable.update(user);
       console.log("update response", response);
     },
     async addMeasurement({ commit, dispatch }, measurement: Measurement) {
