@@ -8,12 +8,10 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@mostlytyped/rethinkid-js-sdk": "^1.31.0",
     "bulma": "^0.9.2",
-    "client-oauth2": "^4.3.3",
     "core-js": "^3.6.5",
-    "jwt-decode": "^3.1.2",
     "normalize.css": "^8.0.1",
-    "socket.io-client": "^4.4.0",
     "vue": "^2.6.11",
     "vue-class-component": "^7.2.3",
     "vue-property-decorator": "^9.1.2",
@@ -42,6 +40,6 @@
     "vue-template-compiler": "^2.6.11"
   },
   "engines": {
-    "node": "12.x"
+    "node": "16.x"
   }
 }

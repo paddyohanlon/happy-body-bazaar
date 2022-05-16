@@ -20,7 +20,7 @@
         </a>
       </div>
 
-      <div id="nav" class="navbar-menu" :class="{ 'is-active': isActive }">
+      <div v-if="authenticated" id="nav" class="navbar-menu" :class="{ 'is-active': isActive }">
         <div class="navbar-start">
           <router-link :to="{ name: 'home' }" class="navbar-item">Weights</router-link>
           <router-link :to="{ name: 'measurements' }" class="navbar-item">Measurements</router-link>
@@ -30,14 +30,8 @@
         <div class="navbar-end">
           <div class="navbar-item">
             <div class="buttons">
-              <template v-if="authenticated">
-                <div class="button">{{ openIdConnect.name || openIdConnect.email }}</div>
-                <button class="button" @click="signOut">Sign out</button>
-              </template>
-              <template v-else>
-                <router-link :to="{ name: 'signUp' }" class="button is-primary">Sign up</router-link>
-                <router-link :to="{ name: 'signIn' }" class="button is-light">Sign in</router-link>
-              </template>
+              <div class="button">{{ openIdConnect.name || openIdConnect.email }}</div>
+              <button class="button" @click="signOut">Sign out</button>
             </div>
           </div>
         </div>
@@ -55,34 +49,18 @@
 import { Component, Vue } from "vue-property-decorator";
 import { State } from "vuex-class";
 import { OpenIDConnect } from "@/types/types";
-import { signOut } from "@/utils";
+import { rid } from "@/rethinkid";
 
 @Component
 export default class App extends Vue {
-  async created() {
-    if (this.authenticated) {
-      await this.$store.dispatch("fetchUser");
-      this.loaded = true;
-    } else {
-      this.loaded = true;
-    }
-  }
-
+  @State(state => state.loaded) loaded!: boolean;
   @State(state => state.authenticated) authenticated!: boolean;
   @State(state => state.openIdConnect) openIdConnect!: OpenIDConnect;
 
   isActive = false;
-  loaded = false;
-
-  get onlineStatus(): string {
-    if (navigator.onLine) {
-      return "online";
-    }
-    return "offline";
-  }
 
   signOut(): void {
-    signOut();
+    rid.logOut();
   }
 }
 </script>

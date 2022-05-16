@@ -24,13 +24,15 @@ export type Measurement = {
 };
 
 export type OpenIDConnect = {
-  userId: string;
+  id: string;
   email: string;
   name: string;
 };
 
 export type RootState = {
+  loaded: boolean;
   authenticated: boolean;
   openIdConnect: OpenIDConnect;
   user: User;
+  userTable: any;
 };
