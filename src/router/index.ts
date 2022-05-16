@@ -1,32 +1,28 @@
 import Vue from "vue";
 import VueRouter, { RouteConfig } from "vue-router";
+import store from "../store";
 import Home from "../views/Home.vue";
 import Measurements from "../views/Measurements.vue";
 import Profile from "../views/Profile.vue";
-import SignIn from "../views/SignIn.vue";
-import SignUp from "../views/SignUp.vue";
-import Callback from "../views/Callback.vue";
+
+import { rid } from "@/rethinkid";
 
 Vue.use(VueRouter);
 
 const routes: Array<RouteConfig> = [
   {
-    path: "/sign-up",
-    name: "signUp",
-    component: SignUp,
-    meta: { requiresAuth: false },
-  },
-  {
-    path: "/sign-in",
-    name: "signIn",
-    component: SignIn,
-    meta: { requiresAuth: false },
-  },
-  {
     path: "/callback",
     name: "callback",
-    component: Callback,
     meta: { requiresAuth: false },
+    async beforeEnter(to, from, next) {
+      try {
+        await rid.completeLogIn();
+        store.dispatch("autoSignIn");
+      } catch (e) {
+        console.error("Sign in callback error:", e);
+      }
+      next({ name: "home" });
+    },
   },
   {
     path: "/measurements",
@@ -42,6 +38,7 @@ const routes: Array<RouteConfig> = [
     path: "/",
     name: "home",
     component: Home,
+    meta: { requiresAuth: false },
   },
 ];
 
@@ -54,9 +51,9 @@ const router = new VueRouter({
 router.beforeEach((to, from, next) => {
   // If route requires auth
   if (to.matched.some(record => record.meta.requiresAuth !== false)) {
-    if (!localStorage.getItem("token")) {
-      // Redirect to the sign in view if no token found and route requires auth
-      next({ name: "signIn" });
+    if (!rid.isLoggedIn()) {
+      // Redirect if no token found and route requires auth
+      next({ name: "home" });
       return;
     }
   }
