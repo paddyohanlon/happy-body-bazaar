@@ -20,7 +20,7 @@
         </a>
       </div>
 
-      <div id="nav" class="navbar-menu" :class="{ 'is-active': isActive }">
+      <div v-if="authenticated" id="nav" class="navbar-menu" :class="{ 'is-active': isActive }">
         <div class="navbar-start">
           <router-link :to="{ name: 'home' }" class="navbar-item">Weights</router-link>
           <router-link :to="{ name: 'measurements' }" class="navbar-item">Measurements</router-link>
@@ -30,10 +30,8 @@
         <div class="navbar-end">
           <div class="navbar-item">
             <div class="buttons">
-              <template v-if="authenticated">
-                <div class="button">{{ openIdConnect.name || openIdConnect.email }}</div>
-                <button class="button" @click="signOut">Sign out</button>
-              </template>
+              <div class="button">{{ openIdConnect.name || openIdConnect.email }}</div>
+              <button class="button" @click="signOut">Sign out</button>
             </div>
           </div>
         </div>
