@@ -25,14 +25,11 @@ export default new Vuex.Store<RootState>({
       name: "",
     },
     user: DEFAULT_USER,
-    userTable: null,
+    userTable: rid.table(USER_TABLE_NAME, {}),
   },
   mutations: {
     SET_USER: (state, user: User) => {
       state.user = user;
-    },
-    SET_USER_TABLE: (state, userTable: any) => {
-      state.userTable = userTable;
     },
     SET_LOADED: (state, loaded: boolean) => {
       state.loaded = loaded;
@@ -58,9 +55,6 @@ export default new Vuex.Store<RootState>({
         try {
           const user = rid.userInfo();
           commit("SIGN_IN", user);
-
-          const userTable = await rid.table(USER_TABLE_NAME, {});
-          commit("SET_USER_TABLE", userTable);
 
           await dispatch("fetchUser");
           commit("SET_LOADED", true);

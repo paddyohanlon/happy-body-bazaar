@@ -1,3 +1,5 @@
+import { Table } from "@mostlytyped/rethinkid-js-sdk/dist/types/table";
+
 // Measurements are always stored in metric.
 
 export type User = {
@@ -34,5 +36,5 @@ export type RootState = {
   authenticated: boolean;
   openIdConnect: OpenIDConnect;
   user: User;
-  userTable: any;
+  userTable: Table;
 };

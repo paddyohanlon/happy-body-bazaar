@@ -10,7 +10,11 @@ The app is set up to use the OAuth Authorization code flow for SPAs (without a c
 
 Check out and run [rethink-identity](https://github.com/mostlytyped/rethink-identity). Follow the setup steps in that repo's README. This Happy Body app is configured (see `.env.local`) to work with rethink-identity. You should be able to sign up, sign in and save user data.
 
+Note, the env var `VUE_APP_APP_ID` also needs to be set if deploying to Netlify.
+
 ## Vue.js project setup
+
+Remember to authorize the Github Packages Registry, e.g. `export NPM_TOKEN=xxx`
 
 ```
 npm install
